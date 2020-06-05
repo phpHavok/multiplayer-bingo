@@ -229,7 +229,7 @@ func main() {
 	// Handle HTTP requests.
 	htmlRoot := http.FileServer(http.Dir(*htmlRootDir))
 	http.Handle("/", htmlRoot)
-	http.HandleFunc("/player", newPlayer)
+	http.HandleFunc("/join", newPlayer)
 	http.HandleFunc("/game", getGameData)
 	http.HandleFunc("/cell", updateBingoCell)
 	http.ListenAndServe(":"+*port, nil)
