@@ -1,0 +1,43 @@
+.lead {
+    display: none;
+}
+
+#bingo {
+    padding: 2rem 0;
+    overflow: hidden;
+}
+
+.bingo-card {
+    overflow: hidden;
+    border: 1px solid #999;
+    margin-bottom: 1rem;
+}
+
+.bingo-cell {
+    width: 25%;
+    padding-top: 25%;
+    float: left;
+    position: relative;
+    cursor: not-allowed;
+    border: 1px solid #999;
+}
+
+.bingo-player:first-child .bingo-cell {
+    cursor: pointer !important;
+}
+
+.bingo-cell:hover {
+    background: #C8C8C7;
+}
+
+.bingo-cell.marked {
+    background: #1897d4 !important;
+}
+
+.bingo-cell div {
+    position: absolute;
+    left: 10%;
+    top: 10%;
+    width: 80%;
+    height: 80%;
+}

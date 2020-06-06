@@ -12,6 +12,14 @@ import (
 	"time"
 )
 
+// Package variable for storing the global state of the game.
+var bingo struct {
+	phrases []string
+	players []player
+	room    string
+	topic   string
+}
+
 type bingoCell struct {
 	Phrase string `json:"phrase"`
 	Marked bool   `json:"marked"`
@@ -22,9 +30,6 @@ type player struct {
 	uid        string
 	BingoBoard []bingoCell `json:"bingo_board"`
 }
-
-var phrases []string
-var players []player
 
 type updateBingoCellReturn struct {
 	Error  string `json:"error,omitempty"`
@@ -78,7 +83,7 @@ func updateBingoCell(w http.ResponseWriter, r *http.Request) {
 
 	// Find the player with the given UID.
 	playerIndex := -1
-	for i, player := range players {
+	for i, player := range bingo.players {
 		if player.uid == uid {
 			playerIndex = i
 		}
@@ -90,19 +95,20 @@ func updateBingoCell(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Make sure the cell is valid.
-	if cellInt < 0 || cellInt+1 > len(players[playerIndex].BingoBoard) {
+	if cellInt < 0 || cellInt+1 > len(bingo.players[playerIndex].BingoBoard) {
 		ret.Error = "Cell out of bounds"
 		fmt.Fprint(w, ret)
 		return
 	}
 
-	players[playerIndex].BingoBoard[cellInt].Marked = markedBool
+	bingo.players[playerIndex].BingoBoard[cellInt].Marked = markedBool
 	ret.Marked = markedBool
 	fmt.Fprint(w, ret)
 }
 
 type getGameDataReturn struct {
 	Error   string   `json:"error,omitempty"`
+	Topic   string   `json:"topic"`
 	Players []player `json:"players"`
 }
 
@@ -127,9 +133,10 @@ func getGameData(w http.ResponseWriter, r *http.Request) {
 
 	// Make sure thet player supplied a valid UID, and if so return the game
 	// data.
-	for _, player := range players {
+	for _, player := range bingo.players {
 		if player.uid == uid {
-			ret.Players = players
+			ret.Players = bingo.players
+			ret.Topic = bingo.topic
 			fmt.Fprint(w, ret)
 			return
 		}
@@ -157,6 +164,14 @@ func newPlayer(w http.ResponseWriter, r *http.Request) {
 	ret := newPlayerReturn{}
 	player := player{}
 
+	// Make sure the room code is valid.
+	room := r.URL.Query().Get("room")
+	if room != bingo.room {
+		ret.Error = "Invalid room code"
+		fmt.Fprint(w, ret)
+		return
+	}
+
 	username := r.URL.Query().Get("username")
 	if username == "" {
 		ret.Error = "Missing username"
@@ -164,17 +179,27 @@ func newPlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Make sure the username is unique among current players.
+	for _, player := range bingo.players {
+		if player.Username == username {
+			ret.Error = "Username already taken"
+			fmt.Fprint(w, ret)
+			return
+		}
+	}
+
 	// Build the player object and add it to our players array.
 	player.Username = username
 	player.uid = strconv.Itoa(rand.Int())
-	player.BingoBoard = make([]bingoCell, len(phrases))
-	for i, phrase := range shufflePhrases(phrases) {
+	player.BingoBoard = make([]bingoCell, len(bingo.phrases))
+	for i, phrase := range shufflePhrases(bingo.phrases) {
 		player.BingoBoard[i].Phrase = phrase
 	}
-	players = append(players, player)
+	bingo.players = append(bingo.players, player)
 
 	ret.UID = player.uid
 	fmt.Fprint(w, ret)
+	fmt.Printf("Player %s joined with UID %s\n", player.Username, player.uid)
 }
 
 // Takes an array of phrases and returns a new array with those phrases randomly
@@ -210,21 +235,30 @@ func main() {
 	// Parse command-line arguments.
 	port := flag.String("port", "8080", "the port to listen on")
 	help := flag.Bool("help", false, "print usage")
-	phrasesFile := flag.String("phrases", "", "the phrases file to use")
+	phrasesFile := flag.String("phrases", "", "the phrases file to use (required)")
 	htmlRootDir := flag.String("html", "./html", "path to the html directory for the game")
+	room := flag.String("room", "", "the room code players will need to join this game (required)")
+	topic := flag.String("topic", "Generic Bingo", "the topic for the game")
 	flag.Parse()
-	if *help || *phrasesFile == "" {
+	if *help || *phrasesFile == "" || *room == "" {
 		flag.Usage()
 		return
 	}
 
+	bingo.room = *room
+	bingo.topic = *topic
+
 	// Load phrases.
-	var err error
-	phrases, err = loadPhrases(*phrasesFile)
+	phrases, err := loadPhrases(*phrasesFile)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	bingo.phrases = phrases
+
+	fmt.Println("Starting up Multiplayer Bingo...")
+	fmt.Printf("Room Code: %s\n", bingo.room)
+	fmt.Printf("Topic: %s\n", bingo.topic)
 
 	// Handle HTTP requests.
 	htmlRoot := http.FileServer(http.Dir(*htmlRootDir))
