@@ -4,10 +4,18 @@ A simple, self-hosted, multiplayer bingo game for friends. Create your own
 phrases and generate fun bingo boards to play in an online, real-time
 environment.
 
-## Compilation and Running
+Each player who joins the game will play on a randomized 4x4 bingo board,
+generated from 16 phrases. In the future, we may support different-sized
+bingo boards and better phrase support.
 
-To build the application, type `make`. You'll need the Go language installed to
-compile.
+## Installation
+
+Check out the [releases](https://github.com/phpHavok/multiplayer-bingo/releases) page to download a pre-compiled binary for Linux AMD64 systems.
+
+If you want to build the application from scratch, just type `make`. You'll
+need the Go programming language installed to compile.
+
+## Running
 
 To run, type `./bingo` to see the options:
 
