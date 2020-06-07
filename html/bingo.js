@@ -5,7 +5,7 @@ $(function () {
     var g_uid;
 
     var createBingoCard = function (username, board) {
-        var $player = $('<div class="bingo-player col-md-6 col-sm-12">');
+        var $player = $('<div class="bingo-player col-lg-6 col-sm-12">');
         var $card = $('<div class="bingo-card">');
         for (var i = 0; i < board.length; i++) {
             var $cell = $('<div class="bingo-cell">');

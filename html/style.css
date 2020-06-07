@@ -2,6 +2,10 @@
     display: none;
 }
 
+#join .col-sm {
+    margin-bottom: 1rem;
+}
+
 #bingo {
     padding: 2rem 0;
     overflow: hidden;
@@ -36,8 +40,8 @@
 
 .bingo-cell div {
     position: absolute;
-    left: 10%;
-    top: 10%;
-    width: 80%;
-    height: 80%;
+    left: 5%;
+    top: 5%;
+    width: 90%;
+    height: 90%;
 }
